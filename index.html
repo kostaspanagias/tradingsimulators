@@ -108,7 +108,7 @@
 
             // This is your formula for a single transaction (net value after selling)
             // It was named "buy break even" in your request.
-            const buyBreakEvenRaw = price * (1 - feeDecimal);
+            const buyBreakEvenRaw = price * (1 - 2 * feeDecimal);
             
             // Apply the CEILING.MATH logic: multiply by 10000, get the ceiling, then divide by 10000
             const sellBreakEven = Math.ceil(sellBreakEvenRaw * 10000) / 10000;
