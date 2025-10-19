@@ -91,7 +91,10 @@
                         
                         <div class="d-flex justify-content-between align-items-center p-3 bg-body-tertiary rounded">
                             <h4 class="fw-light mb-0">Trade Position Profit</h4>
-                            <span id="trade-profit" class="badge fs-5 rounded-pill bg-secondary">$0.00</span>
+                            <div class="text-end">
+                                <span id="trade-profit" class="badge fs-5 rounded-pill bg-secondary">$0.00</span>
+                                <div id="trade-profit-percent" class="text-body-secondary fw-bold mt-1" style="font-size: 0.9em;">(0.00%)</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -100,83 +103,94 @@
     </div>
 
     <script>
-        // Get all DOM elements
-        const buyQuantityInput = document.getElementById('buy-quantity');
-        const buyPriceInput = document.getElementById('buy-price');
-        const buyFeeInput = document.getElementById('buy-fee');
-        const sellPriceInput = document.getElementById('sell-price');
-        const sellFeeInput = document.getElementById('sell-fee');
-        
-        const totalAmountEl = document.getElementById('total-amount');
-        const buyFeesEl = document.getElementById('buy-fees-output');
-        const netQuantityEl = document.getElementById('net-quantity');
-        const sellingQuantityEl = document.getElementById('selling-quantity');
-        const sellingAmountEl = document.getElementById('selling-amount');
-        const sellFeesEl = document.getElementById('sell-fees-output');
-        const netAmountEl = document.getElementById('net-amount');
-        const tradeProfitEl = document.getElementById('trade-profit');
-        
-        function calculatePnL() {
-            // Read all inputs
-            const buyQuantity = parseFloat(buyQuantityInput.value);
-            const buyPrice = parseFloat(buyPriceInput.value);
-            const buyFeePercent = parseFloat(buyFeeInput.value) || 0;
-            const sellingPrice = parseFloat(sellPriceInput.value);
-            const sellFeePercent = parseFloat(sellFeeInput.value) || 0;
-            
-            // Validate required inputs
-            if (isNaN(buyQuantity) || isNaN(buyPrice) || isNaN(sellingPrice) || buyQuantity <= 0 || buyPrice <= 0 || sellingPrice <= 0) {
-                // Reset fields if inputs are invalid
-                [totalAmountEl, buyFeesEl, netQuantityEl, sellingQuantityEl, sellingAmountEl, sellFeesEl, netAmountEl, tradeProfitEl].forEach(el => el.textContent = '$0.00');
-                tradeProfitEl.className = 'badge fs-5 rounded-pill bg-secondary';
-                return;
-            }
-            
-            // --- Buy Side Calculations ---
-            const totalAmount = buyQuantity * buyPrice;
-            // Note: The buy fee is taken from the quantity of the asset purchased.
-            const buyFeeDecimal = buyFeePercent / 100;
-            const buyFeesQuantity = buyQuantity * buyFeeDecimal;
-            const netQuantity = buyQuantity - buyFeesQuantity;
-            
-            // --- Sell Side Calculations ---
-            const sellingQuantity = netQuantity;
-            const sellingAmount = sellingQuantity * sellingPrice;
-            const sellFeeDecimal = sellFeePercent / 100;
-            const sellFeesAmount = sellingAmount * sellFeeDecimal;
-            const netAmount = sellingAmount - sellFeesAmount;
-            
-            // --- Final Profit Calculation ---
-            const profit = netAmount - totalAmount;
+    // Get all DOM elements
+    const buyQuantityInput = document.getElementById('buy-quantity');
+    const buyPriceInput = document.getElementById('buy-price');
+    const buyFeeInput = document.getElementById('buy-fee');
+    const sellPriceInput = document.getElementById('sell-price');
+    const sellFeeInput = document.getElementById('sell-fee');
+    
+    const totalAmountEl = document.getElementById('total-amount');
+    const buyFeesEl = document.getElementById('buy-fees-output');
+    const netQuantityEl = document.getElementById('net-quantity');
+    const sellingQuantityEl = document.getElementById('selling-quantity');
+    const sellingAmountEl = document.getElementById('selling-amount');
+    const sellFeesEl = document.getElementById('sell-fees-output');
+    const netAmountEl = document.getElementById('net-amount');
+    const tradeProfitEl = document.getElementById('trade-profit');
+    const tradeProfitPercentEl = document.getElementById('trade-profit-percent'); // ADDED
 
-            // --- Update UI ---
-            totalAmountEl.textContent = `$${totalAmount.toFixed(2)}`;
-            buyFeesEl.textContent = `${buyFeesQuantity.toFixed(4)}`;
-            netQuantityEl.textContent = `${netQuantity.toFixed(4)}`;
-            
-            sellingQuantityEl.textContent = `${sellingQuantity.toFixed(4)}`;
-            sellingAmountEl.textContent = `$${sellingAmount.toFixed(2)}`;
-            sellFeesEl.textContent = `$${sellFeesAmount.toFixed(2)}`;
-            netAmountEl.textContent = `$${netAmount.toFixed(2)}`;
-            
-            // Update profit with dynamic color
-            tradeProfitEl.textContent = `$${profit.toFixed(2)}`;
-            if (profit > 0) {
-                tradeProfitEl.className = 'badge fs-5 rounded-pill bg-success';
-            } else if (profit < 0) {
-                tradeProfitEl.className = 'badge fs-5 rounded-pill bg-danger';
-            } else {
-                tradeProfitEl.className = 'badge fs-5 rounded-pill bg-secondary';
-            }
+    function calculatePnL() {
+        // Read all inputs
+        const buyQuantity = parseFloat(buyQuantityInput.value);
+        const buyPrice = parseFloat(buyPriceInput.value);
+        const buyFeePercent = parseFloat(buyFeeInput.value) || 0;
+        const sellingPrice = parseFloat(sellPriceInput.value);
+        const sellFeePercent = parseFloat(sellFeeInput.value) || 0;
+        
+        // Validate required inputs
+        if (isNaN(buyQuantity) || isNaN(buyPrice) || isNaN(sellingPrice) || buyQuantity <= 0 || buyPrice <= 0 || sellingPrice <= 0) {
+            [totalAmountEl, buyFeesEl, netQuantityEl, sellingQuantityEl, sellingAmountEl, sellFeesEl, netAmountEl, tradeProfitEl].forEach(el => el.textContent = '$0.00');
+            tradeProfitPercentEl.textContent = '(0.00%)'; // ADDED: Reset percentage
+            tradeProfitEl.className = 'badge fs-5 rounded-pill bg-secondary';
+            tradeProfitPercentEl.className = 'text-body-secondary fw-bold mt-1'; // ADDED: Reset percentage color
+            return;
         }
         
-        // Add event listeners to all inputs
-        [buyQuantityInput, buyPriceInput, buyFeeInput, sellPriceInput, sellFeeInput].forEach(input => {
-            input.addEventListener('input', calculatePnL);
-        });
+        // --- Buy Side Calculations ---
+        const totalAmount = buyQuantity * buyPrice;
+        const buyFeeDecimal = buyFeePercent / 100;
+        const buyFeesQuantity = buyQuantity * buyFeeDecimal;
+        const netQuantity = buyQuantity - buyFeesQuantity;
         
-        // Initial calculation on page load
-        document.addEventListener('DOMContentLoaded', calculatePnL);
-    </script>
+        // --- Sell Side Calculations ---
+        const sellingQuantity = netQuantity;
+        const sellingAmount = sellingQuantity * sellingPrice;
+        const sellFeeDecimal = sellFeePercent / 100;
+        const sellFeesAmount = sellingAmount * sellFeeDecimal;
+        const netAmount = sellingAmount - sellFeesAmount;
+        
+        // --- Final Profit Calculation ---
+        const profit = netAmount - totalAmount;
+        // ADDED: Calculate Profit Percentage
+        let profitPercent = 0;
+        if (totalAmount > 0) { // Avoid division by zero
+            profitPercent = (profit / totalAmount) * 100;
+        }
+
+        // --- Update UI ---
+        totalAmountEl.textContent = `$${totalAmount.toFixed(2)}`;
+        buyFeesEl.textContent = `${buyFeesQuantity.toFixed(4)}`;
+        netQuantityEl.textContent = `${netQuantity.toFixed(4)}`;
+        
+        sellingQuantityEl.textContent = `${sellingQuantity.toFixed(4)}`;
+        sellingAmountEl.textContent = `$${sellingAmount.toFixed(2)}`;
+        sellFeesEl.textContent = `$${sellFeesAmount.toFixed(2)}`;
+        netAmountEl.textContent = `$${netAmount.toFixed(2)}`;
+        
+        // Update profit with dynamic color
+        tradeProfitEl.textContent = `$${profit.toFixed(2)}`;
+        tradeProfitPercentEl.textContent = `(${profitPercent.toFixed(2)}%)`; // ADDED: Update percentage text
+        
+        if (profit > 0) {
+            tradeProfitEl.className = 'badge fs-5 rounded-pill bg-success';
+            tradeProfitPercentEl.className = 'text-success fw-bold mt-1'; // ADDED: Set success color
+        } else if (profit < 0) {
+            tradeProfitEl.className = 'badge fs-5 rounded-pill bg-danger';
+            tradeProfitPercentEl.className = 'text-danger fw-bold mt-1'; // ADDED: Set danger color
+        } else {
+            tradeProfitEl.className = 'badge fs-5 rounded-pill bg-secondary';
+            tradeProfitPercentEl.className = 'text-body-secondary fw-bold mt-1'; // ADDED: Reset color
+        }
+    }
+    
+    // Add event listeners to all inputs
+    [buyQuantityInput, buyPriceInput, buyFeeInput, sellPriceInput, sellFeeInput].forEach(input => {
+        input.addEventListener('input', calculatePnL);
+    });
+    
+    // Initial calculation on page load
+    document.addEventListener('DOMContentLoaded', calculatePnL);
+</script>
 </body>
 </html>
